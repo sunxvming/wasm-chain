@@ -1,0 +1,47 @@
+{
+    "____comment": "This file was generated with wasm-abigen. DO NOT EDIT ",
+    "version": "wasm::abi/1.1",
+    "structs": [
+        {
+            "name": "get_data",
+            "base": "",
+            "fields": [
+                {
+                    "name": "key",
+                    "type": "string"
+                }
+            ]
+        },
+        {
+            "name": "set_data",
+            "base": "",
+            "fields": [
+                {
+                    "name": "key",
+                    "type": "string"
+                },
+                {
+                    "name": "value",
+                    "type": "string"
+                }
+            ]
+        }
+    ],
+    "types": [],
+    "actions": [
+        {
+            "name": "get_data",
+            "type": "get_data",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "set_data",
+            "type": "set_data",
+            "ricardian_contract": ""
+        }
+    ],
+    "tables": [],
+    "ricardian_clauses": [],
+    "variants": [],
+    "abi_extensions": []
+}

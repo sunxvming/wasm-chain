@@ -1,0 +1,524 @@
+【环境】
+	vscode
+		c/c++
+		c/c++ Snippets
+		mingw-w64
+	xshell 版本6
+	centos7.6
+	vmvare workstation 15pro   15.5.1
+		设置共享文件
+		关闭防火墙
+			systemctl status firewalld.service
+			systemctl stop firewalld.service    
+			systemctl disable firewalld.service
+		gcc 8.3.1
+			升级gcc8 https://my.oschina.net/michaelshu/blog/3024970
+		克隆虚拟机，主机器向其他机器复制公钥
+			克隆时确认不要有自动挂载共享目录的配置
+		设置ip，用桥接模式
+			配置文件地址：/etc/sysconfig/network-scripts/ifcfg-eth0  eth0代表第一块网卡
+			TYPE=Ethernet
+			PROXY_METHOD=none
+			BROWSER_ONLY=no
+			BOOTPROTO=static
+			DEFROUTE=yes
+			IPV4_FAILURE_FATAL=no
+			IPV6INIT=yes
+			IPV6_AUTOCONF=yes
+			IPV6_DEFROUTE=yes
+			IPV6_FAILURE_FATAL=no
+			IPV6_ADDR_GEN_MODE=stable-privacy
+			NAME=ens33
+			UUID=30949b72-c749-4599-8cc4-061216b0650c
+			DEVICE=ens33
+			ONBOOT=yes
+			IPADDR=192.168.1.11
+			GATEWAY=192.168.1.1
+			NETMASK=255.255.255.0
+			DNS1=8.8.8.8
+			ZONE=		
+			
+			systemctl restart network
+    程序
+        protobuf
+            yum install -y  autoconf  automake  libtool
+
+【节点】
+公网
+47.108.65.199
+47.105.219.186
+114.55.102.14
+47.106.247.169
+
+测试
+120.79.216.93
+47.108.52.94
+
+
+区块浏览器
+47.116.69.138:20022
+
+
+【info】
+
+cat /proc/{pid}/status | grep Threads
+
+cat /proc/77430/status | grep Threads
+
+
+【端口】
+11187
+
+ss -at|grep 11187 |wc -l
+
+Recv-Q--Send-Q
+ss -at|grep 11187|awk '$2 > 1000 || $3 > 1000 {print $0}'
+
+查看转发节点
+tcpdump -i any  -nn  "port 11187 and host 47.108.52.94"
+
+netstat -na|grep 11187 |awk '{print $6}'| sort |uniq -c |sort -nr
+
+
+tcpdump -i any -nn  host 47.108.52.94
+tcpdump -i any -nn  des 47.108.52.94
+tcpdump -i any -nn  src 47.108.52.94
+
+tcpdump -i any -nn  host  123.179.23.127
+
+
+
+tcpdump -i any -nn  host 47.105.219.186
+tcpdump -i any -nn  port 11187
+
+
+tcpdump -i any -nn  host 47.108.65.199
+
+
+
+scp /mnt/ebpc/ebpc root@192.168.1.10:/root/project/ebpc
+
+
+
+sed -i "s/\"IP\": \".*\"/\"IP\": \"192.168.1.10\"/g" config.json
+
+
+
+
+
+valgrind --tool=memcheck --leak-check=full ./ebpc -m
+
+
+【rocksdb】
+2万块，200M   一个块10k
+
+
+
+
+
+
+	
+【所有线程】
+0.主线程
+
+ca
+    1.加块线程
+    2.区块同步线程
+
+
+
+
+
+
+网络模块
+-------------------------------
+
+【所有线程】
+    1. epoll tcp监听线程
+    2. net读线程
+    3. net写线程
+    4. net工作线程
+    5. nodelist刷新线程
+        主要是公网节点的nodelist的刷新
+    6. 内网节点定时切换公网节点线程 
+        12小时一次
+    7. 心跳检测
+        公网节点向所有节点的发送的心跳
+        向其他公网节点获取高度
+    8. 内网udp广播线程，广播本节点信息
+        其他节点接收到其他节点的udp广播来的节点后，会将其加入到自己的nodelist中
+    9. 内网udp监听线程
+    10. 内网节点定时向公网节点请求所有nodelist来维护自己NodeCache
+
+
+
+【连接逻辑】
+首次加入网络的节点从配置文件中的节点公网列表选取节点进行连接
+    连接成功后向各个公网发送RegisterNodeReq协议以注册自己节点的信息
+        内网节点只向一个公网节点连接
+        公网节点向所有公网节点连接
+
+公网节点
+    向所有公网节点注册节点信息
+    获取节点列表(sub_nodelist + public_node)
+    把获取的节点列表加入自己的nodelist中
+内网节点
+    只向随机的一个公网节点注册信息
+    获取节点列表(public_node)
+    把获取的节点列表加入自己的nodelist中
+
+
+【公网节点同步节点】
+只有公网节点才同步节点信息
+1. 同步请求时把sub_nodelist + public_node发给公网节点
+2. 对方节点处理请求时把sub_nodelist + public_node节点加入到对方的节点列表中
+3. 处理完再把对方的的sub_nodelist发给请求的节点
+
+
+【内网节点同步节点】
+维护了一个NodeCache，从公网节点同步节点信息
+
+
+【如何广播】
+内网节点
+    向自己所连接的公网节点发送BroadcaseMsgReq
+
+公网节点广播
+    向所属子节点发送
+    向其他所有公网节点转发
+
+接收方如何处理广播的消息
+    来源是子网节点
+        向所属子节点发送
+        向其他所有公网节点转发
+    来源是公网节点
+        向所属子节点发
+
+
+【如何转发】
+请求发送
+    内网节点
+        通过自己的public_node_id找到公网节点来发送
+        
+    公网节点 
+        通过目标节点的public_node_id找到公网节点来发送
+
+请求接收
+    转发目标节点在自己的nodelist中
+        直接向目标节点发送
+    转发目标节点不在自己的nodelist中
+        找到目标节点所连接的公网节点进行发送
+
+
+
+【心跳保活机制】
+心跳机制相关的常量
+    HEART_TIME：距离上次传送数据多少时间未收到新报文判断为开始检测，默认为30秒
+    HEART_INTVL：检测开始每多少时间发送心跳包，默认为10秒
+    HEART_PROBES：发送几次心跳包对方未响应则close连接，默认为3次
+心跳逻辑
+    步骤1.节点启动初始化时启动一个timer定时器，定时器会每隔HEART_INTVL秒的时间来进行心跳操作
+    步骤2.当某个节点经过HEART_TIME后便开始发送PingReq协议进行心跳检测
+    步骤3.对方节点收到PingReq包后会向请求节点回复PongReq包
+    步骤4.本节点收到PongReq包后重置心跳
+    步骤5.若本节点经过HEART_PROBES此后都没有收到对方的PongReq包,说明对方节点已经断开，此时清除此节点
+
+节点高度的同步也通过Ping、Pong来完成
+     
+     
+     
+
+【数据发送和接受流程】	
+    维护发送接收的数据结构
+    BufferCrol -- BufferMap -- SocketBuf(port_and_ip-->fd)	
+        其中SocketBuf有
+            接收的buffer：cache
+            发送的buffer：send_cache
+	发送
+		net_com::send_one_message(const node& to, const net_pack& pack)
+			-->BufferCrol::add_write_pack(send_data.ip, send_data.port, pack)-->push_send_msg(data);   
+                把发送数据 push到BufferCrol的BufferMap的对应的 SocketBuf 中
+			-->global::queue_write.push(send_data);  push到写队列中
+		-->WorkThreads::work(int id)
+			-->global::queue_write.try_wait_pop(data)  工作队列中取工作
+                --> WorkThreads::handle_net_write(data);
+				--> Singleton<BufferCrol>::get_instance()->get_write_buffer_queue(port_and_ip); 从 SocketBuf中取发送的数据
+				--> net_tcp::Send(data.fd, buff.c_str(), buff.size(), 0);
+                    Send是发送SocketBuf中的数据，能发多少发多少，满了就退出
+                --> 根据发送了多少数据再从SocketBuf中删除
+
+	epoll_mode
+		监听线程，在init()的时候启动的线程
+			EpollMode::epoll_loop()  
+                当有连接过来的时候，if(events[n].data.fd == this->fd_ser_main) 
+                Singleton<BufferCrol>::get_instance()->add_buffer(u32_ip, u16_port, connfd);  
+                    作用是添加一个此链接的buffer BufferMap[port_and_ip] = tmp;
+                    	
+		
+		接收data
+			EpollMode::epoll_loop() 
+            当有消息来的时候(EPOLLIN)
+                global::queue_read.push(data);
+			work_read 线程去 queue_read 中读数据，主要是从fd中读数据 
+            WorkThreads::work_read()
+                --> WorkThreads::handle_net_read(data) 
+                    --> 从fd中read数据到buf中 read(data.fd, buf, MAXLINE);
+                        read是每次读的超过MAXLINE后继续读，没超过的话说明缓冲区读完了
+					-->将buf放到缓冲区 Singleton<BufferCrol>::get_instance()->add_read_buffer_queue(data.ip, data.port, buf, nread)
+					--> SocketBuf::add_data_to_read_buf(char *data, size_t len)
+                        add到对应的SocketBuf中，并查看add的数据是否可以组成一个完成的包，如果可以，将包添加到队列中   
+                            SocketBuf中的数据也组成多个包
+					--> SocketBuf->send_pk_to_mess_queue(msg);     
+						--> 缓冲区的数据处理后成 MsgData, type是 E_WORK push到queue_work中 queue_work.push(send_data);
+			work 线程处理queue_work中的MsgData数据 WorkThreads::work(int id) --> global::queue_work.try_wait_pop(data)
+				--> WorkThreads::handle_network_event(data);  处理的是 MsgData类型 
+				--> 走CA_SEND分支  ca_use_callback() 用回调函数的list处理recev的data  
+                    回调函数在 ca_interface.cpp的Init()中 net_join_receive_fun(pMsgRecv); 添加函调函数 MsgRecv(const char *ip, const char *message, char **out, int *outlen)
+                    --> MsgRecv中的又是NetMessage((void *)message, (void **)out, outlen);
+
+
+
+
+
+	
+【ca模块】
+-------------
+	accountinfo
+		生成account
+			生成私钥 生成公钥 生成地址 本地保存 设置默认钱包地址和全局公私钥
+			
+		
+
+    【验证】
+    验证vin的签名
+        对vin使用私钥签名，公钥验签的抽象层次比较低，bitcon用的 锁定脚本和解锁脚本来解决，验证的逻辑没有写死的代码里
+    
+
+【交易流程】
+1.本节点创建交易体
+2.选择其他节点签名交易体
+3.若交易数量足够后发送给创建交易节点
+4.交易节点创建块结构并发送广播给其他节点
+5.交易节点等待若干时间向其他节点验证是否上链，若上链则在本地建块
+
+
+
+    
+【区块验证】
+加块的时候
+	所加的块的prehash在自己的本地不存在
+	加入块的hash已存在
+	奖励是不是合法的
+	utxo验证
+	验证vin的签名
+	签名的时候验证时间戳
+    
+    
+    
+
+
+
+=====================
+GetDevPassword
+
+SetDevPassword
+
+NetMessageGetDevPriKey      获取密码
+
+NetMessageChangeDevPriKey   修改密码
+	isDevicePasswordValid   
+
+interface_GetDevPrivatekey()
+interface_SetDevPassword        
+
+12345679
+dcedaf77a4c690d3e9c2f0fc3684a20a29f3d8557af20ecd846cceaf1bcf0847
+    
+------------------
+	//配置文件初始化
+	if (false == Singleton<Config>::get_instance()->InitFile())
+	{
+		debug("配置文件初始化失败");
+		return false;
+	}
+
+	char * pwd = "12345678";
+	char buff[10000] = {0};
+	unsigned int n = 1000*1000;
+	bool ret = interface_GetDevPrivatekey(pwd,buff, &n);
+	printf("interface_GetDevPrivatekey:%s",ret?"true":"false");
+	printf("n:%d \n", (int)n);
+	printf("buff:%s \n", buff);
+
+	n = 1000*1000;
+	ret = interface_SetDevPassword("12345678", "12345679", buff, &n);
+	printf("interface_SetDevPassword:%s",ret?"true":"false");
+	printf("n:%d \n", (int)n);
+	printf("buff:%s \n", buff);
+
+	n = 1000*1000;
+	interface_SetDevPassword("fk8eg39z", "12345678", buff, &n);
+
+	node_request1(buff);
+------------------	
+	
+
+
+    
+
+
+
+
+【base58 与 base64 的区别】
+Base58是用于Bitcoin中使用的一种独特的编码方式，主要用于产生Bitcoin的钱包地址。
+
+相比Base64，Base58不使用数字"0"，字母大写"O"，字母大写"I"，和字母小写"l"，以及"+"和"/"符号。
+
+设计Base58主要的目的是：
+
+避免混淆。在某些字体下，数字0和字母大写O，以及字母大写I和字母小写l会非常相似。
+不使用"+"和"/"的原因是非字母或数字的字符串作为帐号较难被接受。
+没有标点符号，通常不会被从中间分行。
+大部分的软件支持双击选择整个字符串。
+但是这个base58的计算量比base64的计算量多了很多。因为58不是2的整数倍，需要不断用除法去计算。
+而且长度也比base64稍微多了一点。
+
+
+
+【TCP打洞原理】
+自己基于socket套接字实现的下载功能发现当网络环境发生变化后客户端连不上服务端，从大佬哪儿了解到可能
+是NAT路由器认为发送的消息是不被信任的，需要TCP打洞来克服这一难题。下面是看到的关于TCP打洞原理。
+
+我们假设在两个不同的局域网后面分别有2台客户机A和 B，AB所在的局域网都分别通过一个路由器接入互联网。
+互联网上有一台服务器S。 
+现在AB是无法直接和对方发送信息的，AB都不知道对方在互联网上真正的IP和端口， AB所在的局域网的路由器
+只允许内部向外主动发送的信息通过。对于B直接发送给A的路由器的消息，路由会认为其“不被信任”而直接丢弃。 
+要实现 AB直接的通讯，就必须进行以下3步：
+
+（1） A首先连接互联网上的服务器S并发送一条消息（对于UDP这种无连接的协议其实直接初始会话发送消息即可），
+这样S就获取  了A在互联网上的实际终端（发送消息的IP和端口号）。
+（2）接着 B也进行同样的步骤，S就知道了AB在互联网上的终端（这就是“打洞”）。
+（3）接着S分别告诉A和B对方客户端在互联网上的实际终端，也即S告诉A客户B的会话终端，S告诉B客户A的会话终端。
+这样，在AB都知道了对方的实际终端之后，就可以直接通过实际终端发送消息了（因为先前双方都向外发送过消息，
+路由上已经有允许数据进出的消息通道）。
+
+
+【select使用技巧】
+1.select函数作为定时器使用
+it_value.tv_sec ＝ 0;
+it_value.tv_usec ＝ 100000；
+select(1,NULL,NULL,NULL,&it_value);
+上面的代码并不是立即返回而是等待100ms，可以作为定时器使用，并且准确度比sleep高。
+
+
+The inet_pton() function converts a presentation format address (that is,
+     printable form as held in a character string) to network format (usually
+     a struct in_addr or some other internal binary representation, in network
+     byte order).
+
+【】
+当我们以非阻塞的方式来进行连接的时候，返回的结果如果是 -1,这并不代表这次连接发生
+了错误，如果它的返回结果是 EINPROGRESS，那么就代表连接还在进行中。 后面可以通过
+poll或者select来判断socket是否可写，如果可以写，说明连接完成了
+
+
+
+
+共识数需要改的地方
+1.c++配置文件 2.交易传入的参数
+
+
+多账号交易
+
+http://192.168.1.11:8080/api_get_tx_owner?tx_hash=f69d488bd9b0db419f8fe518c00c056870a7a23db60d063df593b22eb8af3513
+
+一对一
+http://192.168.1.11:11190/test_create_multi_tx?from_addr=1vkS46QffeM4sDMBBjuJBiVkMQKY7Z8Tu&to_addr=1PTAffAfGhrEPefZSfvT3SDG3q6KF1wHhS&amount=100&&fee=0.01
+
+一对多
+http://192.168.1.11:8080/test_create_multi_tx?from_addr=1vkS46QffeM4sDMBBjuJBiVkMQKY7Z8Tu&to_addr=1FYZNhN9kzV5SpMqQ59mQtT4aquPHJNJFt,1HFq6ptYGGHvJfsxysuj2E5YFJ3zV9swsz,1LRBEcVzNFwCq67HcVbvmaafq2L8vhZraL&amount=100,100,100
+
+多对一
+http://192.168.1.11:8080/test_create_multi_tx?from_addr=16psRip78QvUruQr9fMzr8EomtFS1bVaXk,1FYZNhN9kzV5SpMqQ59mQtT4aquPHJNJFt&to_addr=1HFq6ptYGGHvJfsxysuj2E5YFJ3zV9swsz&amount=1
+
+多对多
+http://192.168.1.11:8080/test_create_multi_tx?from_addr=1HFq6ptYGGHvJfsxysuj2E5YFJ3zV9swsz,1LRBEcVzNFwCq67HcVbvmaafq2L8vhZraL&to_addr=16psRip78QvUruQr9fMzr8EomtFS1bVaXk,1FYZNhN9kzV5SpMqQ59mQtT4aquPHJNJFt&amount=50,50
+
+
+
+
+jsonrpc
+创建交易体 (create_tx_message)
+{
+    "jsonrpc": "2.0",
+    "id": "1",
+    "method": "create_tx_message",
+    "params": {
+        "from_addr": ["1126G5Cjd6zM4NdqhDZmYSCyGMVshGraEF","16psRip78QvUruQr9fMzr8EomtFS1bVaXk","17Pa5grGz4K3vavf44hHuGq67ooZz9Gr3n"],
+        "to_addr": [{"addr": "18yJ6bwkFHVkBQBHhzKLbTyD4e2HGAchHE", "value": "250"}],
+        "fee": "0.001"
+    }
+}
+
+{
+    "id": "1",
+    "jsonrpc": "2.0",
+    "result": {
+        "tx_data": "ENqcgMPd9+wCIiIxMTI2RzVDamQ2ek00TmRxaERabVlTQ3lHTVZzaEdyYUVGMig0YzIzODExZWVjZTViNjgwN2Y1NWU3Yzg4NzhiZjQwYTdjMWU2YmVkQmoKQgpAYjI0Y2I1NWYxZTJlZGM2ZmRlZTcxZTIzZWMzMmIzYzlhMjhmNjVjNDhjODYxZGRmNTA2ZjRhYTU4NmNjY2MyYRIkEiIxMTI2RzVDamQ2ek00TmRxaERabVlTQ3lHTVZzaEdyYUVGQmoKQgpAZWMxNDI5N2VlNGUzYzhkODQyYTMzNWJjNTI3OTM0MGMyYWUzYzlkNTAzM2RlNDMyM2M5Njg3OGY2ZWJmMTk5ZhIkEiIxNnBzUmlwNzhRdlVydVFyOWZNenI4RW9tdEZTMWJWYVhrQmoKQgpAOWM0M2Y3Y2ZiNWQ1YjhhOGIzOWZkNjY5MWRlMjYwZDRmYWViOGEyZTU0ZDNlNzg4ZTcyYzVkZDlkZmEzNmJiYRIkEiIxN1BhNWdyR3o0SzN2YXZmNDRoSHVHcTY3b29aejlHcjNuSikIgOWadxIiMTh5SjZid2tGSFZrQlFCSGh6S0xiVHlENGUySEdBY2hIRUopCLDR6xcSIjE3UGE1Z3JHejRLM3ZhdmY0NGhIdUdxNjdvb1p6OUdyM25SUXsiTmVlZFZlcmlmeVByZUhhc2hDb3VudCI6MywiUGFja2FnZUZlZSI6MCwiU2lnbkZlZSI6MTAwMCwiVHJhbnNhY3Rpb25UeXBlIjoidHgifQ==",
+        "tx_encode_hash": "b80fe2eb6e697eed0cf3d2f1f62ca0acfa80686d3e0f0726f41dd924ed8acd22"
+    }
+}
+
+
+
+
+
+{
+    "jsonrpc": "2.0",
+    "id": "1",
+    "method": "send_multi_tx",
+    "params": {
+        "tx_data": "ENqcgMPd9+wCIiIxMTI2RzVDamQ2ek00TmRxaERabVlTQ3lHTVZzaEdyYUVGMig0YzIzODExZWVjZTViNjgwN2Y1NWU3Yzg4NzhiZjQwYTdjMWU2YmVkQmoKQgpAYjI0Y2I1NWYxZTJlZGM2ZmRlZTcxZTIzZWMzMmIzYzlhMjhmNjVjNDhjODYxZGRmNTA2ZjRhYTU4NmNjY2MyYRIkEiIxMTI2RzVDamQ2ek00TmRxaERabVlTQ3lHTVZzaEdyYUVGQmoKQgpAZWMxNDI5N2VlNGUzYzhkODQyYTMzNWJjNTI3OTM0MGMyYWUzYzlkNTAzM2RlNDMyM2M5Njg3OGY2ZWJmMTk5ZhIkEiIxNnBzUmlwNzhRdlVydVFyOWZNenI4RW9tdEZTMWJWYVhrQmoKQgpAOWM0M2Y3Y2ZiNWQ1YjhhOGIzOWZkNjY5MWRlMjYwZDRmYWViOGEyZTU0ZDNlNzg4ZTcyYzVkZDlkZmEzNmJiYRIkEiIxN1BhNWdyR3o0SzN2YXZmNDRoSHVHcTY3b29aejlHcjNuSikIgOWadxIiMTh5SjZid2tGSFZrQlFCSGh6S0xiVHlENGUySEdBY2hIRUopCLDR6xcSIjE3UGE1Z3JHejRLM3ZhdmY0NGhIdUdxNjdvb1p6OUdyM25SUXsiTmVlZFZlcmlmeVByZUhhc2hDb3VudCI6MywiUGFja2FnZUZlZSI6MCwiU2lnbkZlZSI6MTAwMCwiVHJhbnNhY3Rpb25UeXBlIjoidHgifQ==",
+        "sign":
+        [
+            {
+            "tx_signature": "sign1",
+            "public_key": "ICCE0zIeeofRyi20BZ6DvBR+X/q0rrbR7Y+T1AUQdSeq/9DrcOKQHwY0zOgPlPnOm0NPxePnDcBpWyWABfI9vjb4"
+            },
+            {
+            "tx_signature": "sign2",
+            "public_key": "ICBu8o7NlDYMiD4feQgttf5VGl9lklIuPK/HFx+av/vki3BuTUInMyrxZexnCQv+FRqvk89SXhRdbwCDAmcLPlRx"
+            },
+            {
+            "tx_signature": "sign3",
+            "public_key": "ICAUJYLdgxKDb+jINRwaUZT5k4dTOiSmJwpZ+hXxqzVxckypiJBoFChSwCFyyi7ZedvkiXs9t7wAmQmCsRYRSNRI"
+            }            
+        ],
+        "tx_encode_hash": "b80fe2eb6e697eed0cf3d2f1f62ca0acfa80686d3e0f0726f41dd924ed8acd22"
+    }
+}
+
+
+
+
+【python】
+pip3 install json
+pip3 install requests
+pip3 install base64
+pip3 install mysql_connector
+
+
+
+
+浏览器启动
+正式   
+环境  source /root/gxj/venv/venv/bin/activate
+/root/gxj/browser/flask02  manage.py
+
+
+
+
+
+
+
+

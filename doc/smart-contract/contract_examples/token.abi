@@ -1,0 +1,142 @@
+{
+    "____comment": "This file was generated with wasm-abigen. DO NOT EDIT ",
+    "version": "wasm::abi/1.1",
+    "structs": [
+        {
+            "name": "account",
+            "base": "",
+            "fields": [
+                {
+                    "name": "owner",
+                    "type": "string"
+                },
+                {
+                    "name": "balance",
+                    "type": "uint64"
+                }
+            ]
+        },
+        {
+            "name": "create",
+            "base": "",
+            "fields": [
+                {
+                    "name": "issuer",
+                    "type": "string"
+                },
+                {
+                    "name": "token_name",
+                    "type": "string"
+                },
+                {
+                    "name": "maximum_supply",
+                    "type": "uint64"
+                }
+            ]
+        },
+        {
+            "name": "currency_stats",
+            "base": "",
+            "fields": [
+                {
+                    "name": "supply",
+                    "type": "uint64"
+                },
+                {
+                    "name": "max_supply",
+                    "type": "uint64"
+                },
+                {
+                    "name": "issuer",
+                    "type": "string"
+                },
+                {
+                    "name": "token_name",
+                    "type": "string"
+                }
+            ]
+        },
+        {
+            "name": "issue",
+            "base": "",
+            "fields": [
+                {
+                    "name": "issuer",
+                    "type": "string"
+                },
+                {
+                    "name": "token_name",
+                    "type": "string"
+                },
+                {
+                    "name": "quantity",
+                    "type": "uint64"
+                }
+            ]
+        },
+        {
+            "name": "transfer",
+            "base": "",
+            "fields": [
+                {
+                    "name": "from",
+                    "type": "string"
+                },
+                {
+                    "name": "to",
+                    "type": "string"
+                },
+                {
+                    "name": "quantity",
+                    "type": "uint64"
+                }
+            ]
+        }
+    ],
+    "types": [],
+    "actions": [
+        {
+            "name": "create",
+            "type": "create",
+            "ricardian_contract": "---\nspec_version: \"0.1.0\"\ntitle: Create New Token\nsummary: 'Create a new token'\nicon: @ICON_BASE_URL@/@TOKEN_ICON_URI@\n---\n\n{{$action.account}} agrees to create a new token with symbol {{asset_to_symbol_code maximum_supply}} to be managed by {{issuer}}.\n\nThis action will not result any any tokens being issued into circulation.\n\n{{issuer}} will be allowed to issue tokens into circulation, up to a maximum supply of {{maximum_supply}}."
+        },
+        {
+            "name": "issue",
+            "type": "issue",
+            "ricardian_contract": "---\nspec_version: \"0.1.0\"\ntitle: Issue Tokens into Circulation\nsummary: 'Issue {{nowrap quantity}} into circulation and transfer into {{nowrap to}}’s account'\nicon: @ICON_BASE_URL@/@TOKEN_ICON_URI@\n---\n\nThe token manager agrees to issue {{quantity}} into circulation, and transfer it into {{to}}’s account.\n\n{{#if memo}}There is a memo attached to the transfer stating:\n{{memo}}\n{{/if}}"
+        },
+        {
+            "name": "transfer",
+            "type": "transfer",
+            "ricardian_contract": "---\nspec_version: \"0.2.0\"\ntitle: Transfer Tokens\nsummary: 'Send {{nowrap quantity}} from {{nowrap from}} to {{nowrap to}}'\nicon: @ICON_BASE_URL@/@TRANSFER_ICON_URI@\n---\n\n{{from}} agrees to send {{quantity}} to {{to}}.\n\n{{#if memo}}There is a memo attached to the transfer stating:\n{{memo}}\n{{/if}}"
+        }
+    ],
+    "tables": [
+        {
+            "name": "accounts",
+            "type": "account",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "token_info",
+            "type": "currency_stats",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        }
+    ],
+    "ricardian_clauses": [
+        {
+            "id": "UserAgreement",
+            "body": "User agreement for the chain can go here."
+        },
+        {
+            "id": "Agreement",
+            "body": ""
+        }
+    ],
+    "variants": [],
+    "abi_extensions": []
+}

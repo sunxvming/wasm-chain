@@ -1,0 +1,23 @@
+{
+    "____comment": "This file was generated with wasm-abigen. DO NOT EDIT ",
+    "version": "wasm::abi/1.1",
+    "structs": [
+        {
+            "name": "ret_int",
+            "base": "",
+            "fields": []
+        }
+    ],
+    "types": [],
+    "actions": [
+        {
+            "name": "ret_int",
+            "type": "ret_int",
+            "ricardian_contract": ""
+        }
+    ],
+    "tables": [],
+    "ricardian_clauses": [],
+    "variants": [],
+    "abi_extensions": []
+}

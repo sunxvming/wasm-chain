@@ -1,0 +1,23 @@
+{
+    "____comment": "This file was generated with wasm-abigen. DO NOT EDIT ",
+    "version": "wasm::abi/1.1",
+    "structs": [
+        {
+            "name": "execute",
+            "base": "",
+            "fields": []
+        }
+    ],
+    "types": [],
+    "actions": [
+        {
+            "name": "execute",
+            "type": "execute",
+            "ricardian_contract": ""
+        }
+    ],
+    "tables": [],
+    "ricardian_clauses": [],
+    "variants": [],
+    "abi_extensions": []
+}

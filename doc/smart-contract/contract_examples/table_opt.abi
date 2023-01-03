@@ -1,0 +1,89 @@
+{
+    "____comment": "This file was generated with wasm-abigen. DO NOT EDIT ",
+    "version": "wasm::abi/1.1",
+    "structs": [
+        {
+            "name": "account",
+            "base": "",
+            "fields": [
+                {
+                    "name": "owner",
+                    "type": "string"
+                },
+                {
+                    "name": "balance",
+                    "type": "uint64"
+                }
+            ]
+        },
+        {
+            "name": "add_account",
+            "base": "",
+            "fields": [
+                {
+                    "name": "owner",
+                    "type": "string"
+                },
+                {
+                    "name": "balance",
+                    "type": "uint64"
+                }
+            ]
+        },
+        {
+            "name": "add_multi",
+            "base": "",
+            "fields": []
+        },
+        {
+            "name": "add_multi2",
+            "base": "",
+            "fields": []
+        },
+        {
+            "name": "get_account",
+            "base": "",
+            "fields": [
+                {
+                    "name": "owner",
+                    "type": "string"
+                }
+            ]
+        }
+    ],
+    "types": [],
+    "actions": [
+        {
+            "name": "add_account",
+            "type": "add_account",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "add_multi",
+            "type": "add_multi",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "add_multi2",
+            "type": "add_multi2",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "get_account",
+            "type": "get_account",
+            "ricardian_contract": ""
+        }
+    ],
+    "tables": [
+        {
+            "name": "accounts",
+            "type": "account",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        }
+    ],
+    "ricardian_clauses": [],
+    "variants": [],
+    "abi_extensions": []
+}
