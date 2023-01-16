@@ -119,6 +119,9 @@ yum install git
  
  
 Q&A:
+
+## 编译安装
+
 ### 编译命令：
 ```
 make 生成测试网程序
@@ -133,3 +136,23 @@ make primary 生成主网程序
 
 3.make 或 make primary
 ```
+
+
+
+### 编译安装测试网debug版
+
+```
+mkdir build
+cmake ..
+make
+```
+
+### 编译安装主网Release版
+
+```
+mkdir build
+cmake ..  -DCMAKE_BUILD_TYPE=Release
+make
+```
+
+

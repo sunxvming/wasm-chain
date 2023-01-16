@@ -39,28 +39,12 @@
 			ZONE=		
 			
 			systemctl restart network
-    程序
+    三方依赖 
         protobuf
             yum install -y  autoconf  automake  libtool
 
-【节点】
-公网
-47.108.65.199
-47.105.219.186
-114.55.102.14
-47.106.247.169
 
-测试
-120.79.216.93
-47.108.52.94
-
-
-区块浏览器
-47.116.69.138:20022
-
-
-【info】
-
+【查看所有线程】
 cat /proc/{pid}/status | grep Threads
 
 cat /proc/77430/status | grep Threads
@@ -124,9 +108,6 @@ valgrind --tool=memcheck --leak-check=full ./ebpc -m
 ca
     1.加块线程
     2.区块同步线程
-
-
-
 
 
 
@@ -318,21 +299,6 @@ ca
 
 
 
-=====================
-GetDevPassword
-
-SetDevPassword
-
-NetMessageGetDevPriKey      获取密码
-
-NetMessageChangeDevPriKey   修改密码
-	isDevicePasswordValid   
-
-interface_GetDevPrivatekey()
-interface_SetDevPassword        
-
-12345679
-dcedaf77a4c690d3e9c2f0fc3684a20a29f3d8557af20ecd846cceaf1bcf0847
     
 ------------------
 	//配置文件初始化
