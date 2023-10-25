@@ -113,6 +113,29 @@ ca
 
 网络模块
 -------------------------------
+一种自动反射消息类型的 Google Protobuf 网络传输方案
+https://blog.csdn.net/Solstice/article/details/6300108
+
+在 muduo 中实现 protobuf 编解码器与消息分发器
+https://www.cnblogs.com/Solstice/archive/2011/04/13/2014362.html
+
+
+
+
+
+
+
+
+
+package[len  data  checksum end_flag]
+data: CommonMsg[version type encrypt compress sub_data]
+sub_data:具体的protobuf消息
+1.收到消息的时先反序列化CommonMsg
+2.根据CommonMsg中的type
+
+
+
+
 
 【所有线程】
     1. epoll tcp监听线程
