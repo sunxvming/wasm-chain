@@ -126,15 +126,23 @@ https://www.cnblogs.com/Solstice/archive/2011/04/13/2014362.html
 
 
 
+网络消息格式
+    package[len  data  checksum end_flag]
+        data: CommonMsg[version type encrypt compress sub_data]
+        sub_data:具体的protobuf消息
+        1.收到消息的时先反序列化CommonMsg
+        2.根据CommonMsg中的type找到对应的protobuf消息
 
-package[len  data  checksum end_flag]
-data: CommonMsg[version type encrypt compress sub_data]
-sub_data:具体的protobuf消息
-1.收到消息的时先反序列化CommonMsg
-2.根据CommonMsg中的type
+如何注册和分发消息？
+ProtobufDispatcher
+    registerCallback()
+        注册消息处理的函数
+    handle(const MsgData &data)
+        收到数据解析并分发
 
-
-
+解析创建的类型是protobuf的Message类型，handle处理函数接收的如何变成具体类型？
+    1.在注册出处理函数的时候，把类型模板参数传进去
+    2.注册回调函数的时候根据传入的模板类型进行向下转型
 
 
 【所有线程】
