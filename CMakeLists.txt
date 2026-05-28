@@ -6,6 +6,9 @@ set(CMAKE_CXX_STANDARD 17)
 
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+# 推荐用下面这种方式
+# list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
+
 include(use-gold-linker)
 include(use-ccache)
 
